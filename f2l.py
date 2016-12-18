@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-# header/usage info
-
 # option parser
 import optparse
 
@@ -24,7 +22,6 @@ import base64
 imsize = 240, 240
 
 validFilenameChars = "-_.!()[]{}&~+^ %s%s%s" % (string.ascii_letters, string.digits, os.path.sep)
-
 
 def removeDisallowedFilenameChars(filename):
     """ Removes disallowed characters from a string
