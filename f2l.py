@@ -49,7 +49,7 @@ def getTracknumberStr(mf, format):
         tmp = mf.get('tracknumber', None)  # Returns [trackstr]
         if tmp is None:
             return tmp
-        tmp = tmp.split('/')[0]
+        tmp = tmp[0].split('/')[0]
         return "%02d" % int(tmp[0])
     elif format == 'm4a':
         tmp = mf.get('trkn', None)  # Returns [(track #, total tracks)] integers
