@@ -23,6 +23,7 @@ imsize = 240, 240
 
 validFilenameChars = "-_.!()[]{}&~+^ %s%s%s" % (string.ascii_letters, string.digits, os.path.sep)
 
+
 def removeDisallowedFilenameChars(filename):
     """ Removes disallowed characters from a string
     :param str filename: input filename to clean
@@ -191,10 +192,6 @@ def flacdir2lossydir(thefolder, thefiles, flacroot, lossyroot, enc_ext, encopts,
     :param bool simulate: don't do anything, just simulate
     :param bool force_update: force a tag update on all lossy files
     """
-    # If we already have a lossy output area, and the latest timestamp on
-    # the flac/folder files is after the latest time on the lossyfiles, 
-    # skip the processing.
-
     # Create the output directory name
     outdir = os.path.join(lossyroot, os.path.relpath(thefolder, flacroot))
     if force_ascii:
@@ -206,7 +203,7 @@ def flacdir2lossydir(thefolder, thefiles, flacroot, lossyroot, enc_ext, encopts,
     if len(flac_files) == 0:
         return
 
-    if not does_dir_need_update(outdir, enc_ext, input_files):
+    if not force_update and not does_dir_need_update(outdir, enc_ext, input_files):
         if purge_orphaned:
             open(os.path.join(outdir, "flac.exists"), 'w').close()
         return
@@ -253,15 +250,12 @@ def flacdir2lossydir(thefolder, thefiles, flacroot, lossyroot, enc_ext, encopts,
         else:
             lossydict[tn] = lt
 
-    # Convert folder.jpg to new artwork here
-
     # Get the time of the source artwork
     flactime = 0
     if flacart:
         flactime = os.path.getmtime(flacart)
 
-    # Get the time of the destination artwork, or in the case
-    # of m4a, the timestamp of the first file (since it's embedded)
+    # Get the time of the destination artwork
     lossytime = 0
     lossyart = os.path.join(outdir, 'folder.jpg')
     if 'folder.jpg' in odirfiles:
@@ -308,9 +302,8 @@ def flacdir2lossydir(thefolder, thefiles, flacroot, lossyroot, enc_ext, encopts,
     
         lossyt = lossydict.get(flac_tagnumber, None)
 
-        # If the ogg exists, update the tags if necessary
+        # If the ogg exists, update the tags
         if lossyt:
-       
             # check time stamps on the flac and lossy files
             # if the flac file is newer, update the tags in the lossy file
             flactime = os.path.getmtime(ft.filename)
@@ -432,7 +425,7 @@ def get_options():
                                              recursively. Album art (named folder.jpg) will be resized to
                                              240x240 resolution and will be embedded in the tags & copied.''')
 
-    p.add_option('-f', action='store', dest='format',
+    p.add_option('-f', action='store', dest='enc_ext',
                  help='Lossy format to use. ogg and m4a are currently supported.')
 
     p.add_option('-o', action='store', dest='encopts', default='',
@@ -477,16 +470,24 @@ def get_options():
 
     (opts, args) = p.parse_args()
     if len(args) < 2:
-        p.error('At least two directory arguments are required, the source flac dir and the root of the transcoded tree.')
+        p.error('At least two directory arguments are required,'
+                'the source flac dir and the root of the transcoded tree.')
    
-    if opts.format not in ('m4a', 'ogg'):
+    if opts.enc_ext not in ('m4a', 'ogg'):
         p.error('Format must be m4a or ogg.  Aborting')
       
     return opts, args
 
 
 def map_walk(f, path, *a, **k):
-    """maps a given function to each folder found in the supplied path."""
+    """maps a given function to each folder found in the supplied path.
+
+    :param function f: function to apply to each folder found
+    :param path: root of path to walk
+    :param *a: additional path args, the flacroot and lossyroot
+    :param **k: key/value dict to pass as named params to the called function
+    """
+    # Passes in path args as *a (flacroot, lossyroot)
     map(lambda (folder, subfolders, files): f(folder, files, *a, **k), os.walk(path))
 
 
@@ -496,12 +497,13 @@ def main():
     options, args = get_options()
 
     # call map_walk
-    for td in args[0:-1]:
-        modargs = [td,args[-1]]
-        map_walk(flacdir2lossydir, td, *modargs, **options.__dict__)
+    lossyroot = args[-1]
+    for flacroot in args[0:-1]:
+        modargs = [flacroot, lossyroot]
+        map_walk(flacdir2lossydir, flacroot, *modargs, **options.__dict__)
 
     if options.purge_orphaned:
-        map_walk(dir_purge, args[-1], *args, **options.__dict__)
+        map_walk(dir_purge, lossyroot, *args, **options.__dict__)
     
 if __name__ == '__main__':
     main()
