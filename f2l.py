@@ -117,7 +117,7 @@ def does_dir_need_update(check_dir, dest_format, input_files):
 
     # Is there a folder.jpg file in the source tree?
     if not any([f.endswith(os.sep + 'folder.jpg') for f in input_files]):
-        print >> sys.stderr, "No album art for {} - Fix this ASAP!".format(os.path.basename(input_files[0]))
+        print >> sys.stderr, "No album art for {} - Fix this ASAP!".format(os.path.dirname(input_files[0]))
     elif not any([f.endswith(os.sep + 'folder.jpg') for f in check_dir_files]):
         # If there's a folder.jpg in the source, but not in the check_dir, process the folder.
         return True
