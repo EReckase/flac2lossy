@@ -137,6 +137,11 @@ def set_album_artist_tags(flacs):
     :param list[mutagen.File] flacs: list of flacs with information
     """
     unique_artists = set([f['artist'][-1] for f in flacs])
+    if len(unique_artists) > 1:
+        new_aa = [u'Various Artists']
+    else:
+        new_aa = [unique_artists.pop()]
+
     for ft in flacs:
         # Clear out the 'albumartist' and 'va' tags, we use the one with spaces
         if 'albumartist' in ft:
@@ -146,10 +151,7 @@ def set_album_artist_tags(flacs):
 
         # Set the album artist tag to the main artist if it's not set
         if 'album artist' not in ft:
-            if len(unique_artists) > 1:
-                ft['album artist'] = [u'Various Artists']
-            else:
-                ft['album artist'] = [unique_artists.pop()]
+            ft['album artist'] = new_aa
 
 
 def apply_rg_to_flacs(flacs, folder_of_flacs):
