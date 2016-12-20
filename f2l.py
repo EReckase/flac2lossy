@@ -22,6 +22,9 @@ import base64
 imsize = 240, 240
 
 validFilenameChars = "-_.!()[]{}&~+^ %s%s%s" % (string.ascii_letters, string.digits, os.path.sep)
+keepTags = {"album", "replaygain_album_gain", "title", "metadata_block_picture", "artist",
+            "album artist", "date", "replaygain_track_gain", "genre", "tracknumber",
+            "replaygain_track_peak", "replaygain_reference_loudness", "replaygain_album_peak"}
 
 
 def removeDisallowedFilenameChars(filename):
@@ -68,7 +71,8 @@ def updateTags(ft, lossyt, format):
     if format == 'ogg':
         lossyt.tags.clear()
         lossyt.tags.update(ft.tags)
-      
+        lossyt.tags = {key: value for key, value in lossyt.tags.items() if key in keepTags}
+
     elif format == 'm4a':
         # We have to explicitly define how each tag is converted.  Sigh.
         lossyt['\xa9nam'] = ft.get('title', [u''])
