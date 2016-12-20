@@ -69,9 +69,10 @@ def updateTags(ft, lossyt, format):
     """
 
     if format == 'ogg':
+        flactags = {k: v for k, v in ft.tags.items() if k in keepTags}
         lossyt.tags.clear()
-        lossyt.tags.update(ft.tags)
-        lossyt.tags = {key: value for key, value in lossyt.tags.items() if key in keepTags}
+        lossyt.tags.update(flactags)
+        # lossyt.tags = {key: value for key, value in lossyt.tags.items() if key in keepTags}
 
     elif format == 'm4a':
         # We have to explicitly define how each tag is converted.  Sigh.
